@@ -1,0 +1,1306 @@
+2023/02/09 21:03:48 - mmengine - INFO - 
+------------------------------------------------------------
+System environment:
+    sys.platform: linux
+    Python: 3.8.15 (default, Nov  4 2022, 20:59:55) [GCC 11.2.0]
+    CUDA available: True
+    numpy_random_seed: 1861604066
+    GPU 0: NVIDIA GeForce RTX 3070 Laptop GPU
+    CUDA_HOME: /usr/local/cuda
+    NVCC: Cuda compilation tools, release 11.3, V11.3.109
+    GCC: gcc (Ubuntu 9.4.0-1ubuntu1~20.04.1) 9.4.0
+    PyTorch: 1.12.1
+    PyTorch compiling details: PyTorch built with:
+  - GCC 9.3
+  - C++ Version: 201402
+  - Intel(R) oneAPI Math Kernel Library Version 2021.4-Product Build 20210904 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v2.6.0 (Git Hash 52b5f107dd9cf10910aaa19cb47f3abf9b349815)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - LAPACK is enabled (usually provided by MKL)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 11.3
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_80,code=sm_80;-gencode;arch=compute_86,code=sm_86;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 8.3.2  (built against CUDA 11.5)
+  - Magma 2.5.2
+  - Build settings: BLAS_INFO=mkl, BUILD_TYPE=Release, CUDA_VERSION=11.3, CUDNN_VERSION=8.3.2, CXX_COMPILER=/opt/rh/devtoolset-9/root/usr/bin/c++, CXX_FLAGS= -fabi-version=11 -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_KINETO -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DSYMBOLICATE_MOBILE_DEBUG_HANDLE -DEDGE_PROFILER_USE_KINETO -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-unused-parameter -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Werror=cast-function-type -Wno-stringop-overflow, LAPACK_INFO=mkl, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, TORCH_VERSION=1.12.1, USE_CUDA=ON, USE_CUDNN=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=OFF, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, USE_ROCM=OFF, 
+
+    TorchVision: 0.13.1
+    OpenCV: 4.6.0
+    MMEngine: 0.5.0
+
+Runtime environment:
+    cudnn_benchmark: False
+    mp_cfg: {'mp_start_method': 'fork', 'opencv_num_threads': 0}
+    dist_cfg: {'backend': 'nccl'}
+    seed: None
+    Distributed launcher: none
+    Distributed training: False
+    GPU number: 1
+------------------------------------------------------------
+
+2023/02/09 21:03:48 - mmengine - INFO - Config:
+model = dict(
+    type='MaskRCNN',
+    data_preprocessor=dict(
+        type='DetDataPreprocessor',
+        mean=[103.53, 116.28, 123.675],
+        std=[1.0, 1.0, 1.0],
+        bgr_to_rgb=False,
+        pad_mask=True,
+        pad_size_divisor=32),
+    backbone=dict(
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=False),
+        norm_eval=True,
+        style='caffe',
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='open-mmlab://detectron2/resnet50_caffe')),
+    neck=dict(
+        type='FPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        num_outs=5),
+    rpn_head=dict(
+        type='RPNHead',
+        in_channels=256,
+        feat_channels=256,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            scales=[8],
+            ratios=[0.5, 1.0, 2.0],
+            strides=[4, 8, 16, 32, 64]),
+        bbox_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[0.0, 0.0, 0.0, 0.0],
+            target_stds=[1.0, 1.0, 1.0, 1.0]),
+        loss_cls=dict(
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+    roi_head=dict(
+        type='StandardRoIHead',
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        bbox_head=dict(
+            type='Shared2FCBBoxHead',
+            in_channels=256,
+            fc_out_channels=1024,
+            roi_feat_size=7,
+            num_classes=1,
+            bbox_coder=dict(
+                type='DeltaXYWHBBoxCoder',
+                target_means=[0.0, 0.0, 0.0, 0.0],
+                target_stds=[0.1, 0.1, 0.2, 0.2]),
+            reg_class_agnostic=False,
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        mask_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        mask_head=dict(
+            type='FCNMaskHead',
+            num_convs=4,
+            in_channels=256,
+            conv_out_channels=256,
+            num_classes=1,
+            loss_mask=dict(
+                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
+    train_cfg=dict(
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.3,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=False),
+            allowed_border=-1,
+            pos_weight=-1,
+            debug=False),
+        rpn_proposal=dict(
+            nms_pre=2000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.5,
+                neg_iou_thr=0.5,
+                min_pos_iou=0.5,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=512,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            mask_size=28,
+            pos_weight=-1,
+            debug=False)),
+    test_cfg=dict(
+        rpn=dict(
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.05,
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100,
+            mask_thr_binary=0.5)))
+dataset_type = 'CocoDataset'
+data_root = '../data/balloon/'
+file_client_args = dict(backend='disk')
+train_pipeline = [
+    dict(type='LoadImageFromFile', file_client_args=dict(backend='disk')),
+    dict(
+        type='LoadAnnotations',
+        with_bbox=True,
+        with_mask=True,
+        poly2mask=False),
+    dict(
+        type='RandomChoiceResize',
+        scales=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
+                (1333, 768), (1333, 800)],
+        keep_ratio=True),
+    dict(type='RandomFlip', prob=0.5),
+    dict(type='PackDetInputs')
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile', file_client_args=dict(backend='disk')),
+    dict(type='Resize', scale=(1333, 800), keep_ratio=True),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(
+        type='PackDetInputs',
+        meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                   'scale_factor'))
+]
+train_dataloader = dict(
+    batch_size=2,
+    num_workers=2,
+    persistent_workers=True,
+    sampler=dict(type='DefaultSampler', shuffle=True),
+    batch_sampler=dict(type='AspectRatioBatchSampler'),
+    dataset=dict(
+        type='CocoDataset',
+        data_root='../data/balloon/',
+        ann_file='train/annotation_coco.json',
+        data_prefix=dict(img='train/'),
+        filter_cfg=dict(filter_empty_gt=True, min_size=32),
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                file_client_args=dict(backend='disk')),
+            dict(
+                type='LoadAnnotations',
+                with_bbox=True,
+                with_mask=True,
+                poly2mask=False),
+            dict(
+                type='RandomChoiceResize',
+                scales=[(1333, 640), (1333, 672), (1333, 704), (1333, 736),
+                        (1333, 768), (1333, 800)],
+                keep_ratio=True),
+            dict(type='RandomFlip', prob=0.5),
+            dict(type='PackDetInputs')
+        ],
+        metainfo=dict(classes=('balloon', ), palette=[(220, 20, 60)])))
+val_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='CocoDataset',
+        data_root='../data/balloon/',
+        ann_file='val/annotation_coco.json',
+        data_prefix=dict(img='val/'),
+        test_mode=True,
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                file_client_args=dict(backend='disk')),
+            dict(type='Resize', scale=(1333, 800), keep_ratio=True),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+            dict(
+                type='PackDetInputs',
+                meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                           'scale_factor'))
+        ],
+        metainfo=dict(classes=('balloon', ), palette=[(220, 20, 60)])))
+test_dataloader = dict(
+    batch_size=1,
+    num_workers=2,
+    persistent_workers=True,
+    drop_last=False,
+    sampler=dict(type='DefaultSampler', shuffle=False),
+    dataset=dict(
+        type='CocoDataset',
+        data_root='../data/balloon/',
+        ann_file='val/annotation_coco.json',
+        data_prefix=dict(img='val/'),
+        test_mode=True,
+        pipeline=[
+            dict(
+                type='LoadImageFromFile',
+                file_client_args=dict(backend='disk')),
+            dict(type='Resize', scale=(1333, 800), keep_ratio=True),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+            dict(
+                type='PackDetInputs',
+                meta_keys=('img_id', 'img_path', 'ori_shape', 'img_shape',
+                           'scale_factor'))
+        ],
+        metainfo=dict(classes=('balloon', ), palette=[(220, 20, 60)])))
+val_evaluator = dict(
+    type='CocoMetric',
+    ann_file='../data/balloon/val/annotation_coco.json',
+    metric=['bbox', 'segm'],
+    format_only=False)
+test_evaluator = dict(
+    type='CocoMetric',
+    ann_file='../data/balloon/val/annotation_coco.json',
+    metric=['bbox', 'segm'],
+    format_only=False)
+train_cfg = dict(type='EpochBasedTrainLoop', max_epochs=100, val_interval=1)
+val_cfg = dict(type='ValLoop')
+test_cfg = dict(type='TestLoop')
+param_scheduler = [
+    dict(
+        type='LinearLR', start_factor=0.001, by_epoch=False, begin=0, end=500),
+    dict(
+        type='MultiStepLR',
+        begin=0,
+        end=12,
+        by_epoch=True,
+        milestones=[8, 11],
+        gamma=0.1)
+]
+optim_wrapper = dict(
+    type='OptimWrapper',
+    optimizer=dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001))
+auto_scale_lr = dict(enable=False, base_batch_size=16)
+default_scope = 'mmdet'
+default_hooks = dict(
+    timer=dict(type='IterTimerHook'),
+    logger=dict(type='LoggerHook', interval=50),
+    param_scheduler=dict(type='ParamSchedulerHook'),
+    checkpoint=dict(type='CheckpointHook', interval=1),
+    sampler_seed=dict(type='DistSamplerSeedHook'),
+    visualization=dict(type='DetVisualizationHook'))
+env_cfg = dict(
+    cudnn_benchmark=False,
+    mp_cfg=dict(mp_start_method='fork', opencv_num_threads=0),
+    dist_cfg=dict(backend='nccl'))
+vis_backends = [dict(type='LocalVisBackend')]
+visualizer = dict(
+    type='DetLocalVisualizer',
+    vis_backends=[dict(type='LocalVisBackend')],
+    name='visualizer')
+log_processor = dict(type='LogProcessor', window_size=50, by_epoch=True)
+log_level = 'INFO'
+load_from = 'https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth'
+resume = False
+metainfo = dict(classes=('balloon', ), palette=[(220, 20, 60)])
+launcher = 'none'
+work_dir = './work_dirs/mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon'
+
+2023/02/09 21:03:48 - mmengine - WARNING - The "visualizer" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:48 - mmengine - WARNING - The "vis_backend" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:48 - mmengine - WARNING - The "model" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:48 - mmengine - WARNING - The "task util" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:49 - mmengine - INFO - Distributed training is not used, all SyncBatchNorm (SyncBN) layers in the model will be automatically reverted to BatchNormXd layers if they are used.
+2023/02/09 21:03:49 - mmengine - WARNING - The "hook" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:49 - mmengine - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+before_train:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DistSamplerSeedHook                
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_train_iter:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) IterTimerHook                      
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_val_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DetVisualizationHook               
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_val_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+(LOW         ) ParamSchedulerHook                 
+(VERY_LOW    ) CheckpointHook                     
+ -------------------- 
+before_test_epoch:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+before_test_iter:
+(NORMAL      ) IterTimerHook                      
+ -------------------- 
+after_test_iter:
+(NORMAL      ) IterTimerHook                      
+(NORMAL      ) DetVisualizationHook               
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_test_epoch:
+(VERY_HIGH   ) RuntimeInfoHook                    
+(NORMAL      ) IterTimerHook                      
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+after_run:
+(BELOW_NORMAL) LoggerHook                         
+ -------------------- 
+2023/02/09 21:03:49 - mmengine - WARNING - The "loop" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:49 - mmengine - WARNING - The "dataset" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:49 - mmengine - WARNING - The "transform" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "data sampler" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "optimizer constructor" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "optimizer" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "optim_wrapper" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "parameter scheduler" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "metric" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - WARNING - The "weight initializer" registry in mmdet did not set import location. Fallback to call `mmdet.utils.register_all_modules` instead.
+2023/02/09 21:03:50 - mmengine - INFO - load model from: open-mmlab://detectron2/resnet50_caffe
+2023/02/09 21:03:50 - mmengine - INFO - Loads checkpoint by openmmlab backend from path: open-mmlab://detectron2/resnet50_caffe
+2023/02/09 21:03:50 - mmengine - WARNING - The model and loaded state dict do not match exactly
+
+unexpected key in source state_dict: conv1.bias
+
+Name of parameter - Initialization information
+
+backbone.conv1.weight - torch.Size([64, 3, 7, 7]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.conv1.weight - torch.Size([64, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.downsample.0.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.downsample.1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.0.downsample.1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.1.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.conv1.weight - torch.Size([64, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn1.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn1.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.conv2.weight - torch.Size([64, 64, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn2.weight - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn2.bias - torch.Size([64]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.conv3.weight - torch.Size([256, 64, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn3.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer1.2.bn3.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.conv1.weight - torch.Size([128, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.downsample.0.weight - torch.Size([512, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.downsample.1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.0.downsample.1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.1.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.2.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.conv1.weight - torch.Size([128, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn1.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn1.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.conv2.weight - torch.Size([128, 128, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn2.weight - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn2.bias - torch.Size([128]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.conv3.weight - torch.Size([512, 128, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn3.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer2.3.bn3.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.conv1.weight - torch.Size([256, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.downsample.0.weight - torch.Size([1024, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.downsample.1.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.0.downsample.1.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.1.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.2.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.3.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.4.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.conv1.weight - torch.Size([256, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn1.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn1.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.conv2.weight - torch.Size([256, 256, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn2.weight - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn2.bias - torch.Size([256]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.conv3.weight - torch.Size([1024, 256, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn3.weight - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer3.5.bn3.bias - torch.Size([1024]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.conv1.weight - torch.Size([512, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.downsample.0.weight - torch.Size([2048, 1024, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.downsample.1.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.0.downsample.1.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.1.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.conv1.weight - torch.Size([512, 2048, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn1.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn1.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.conv2.weight - torch.Size([512, 512, 3, 3]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn2.weight - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn2.bias - torch.Size([512]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.conv3.weight - torch.Size([2048, 512, 1, 1]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn3.weight - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+backbone.layer4.2.bn3.bias - torch.Size([2048]): 
+PretrainedInit: load from open-mmlab://detectron2/resnet50_caffe 
+
+neck.lateral_convs.0.conv.weight - torch.Size([256, 256, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.lateral_convs.1.conv.weight - torch.Size([256, 512, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.lateral_convs.2.conv.weight - torch.Size([256, 1024, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.2.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.lateral_convs.3.conv.weight - torch.Size([256, 2048, 1, 1]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.lateral_convs.3.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.fpn_convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.fpn_convs.1.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.fpn_convs.2.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.2.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+neck.fpn_convs.3.conv.weight - torch.Size([256, 256, 3, 3]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+neck.fpn_convs.3.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+rpn_head.rpn_conv.weight - torch.Size([256, 256, 3, 3]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_conv.bias - torch.Size([256]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_cls.weight - torch.Size([3, 256, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_cls.bias - torch.Size([3]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_reg.weight - torch.Size([12, 256, 1, 1]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+rpn_head.rpn_reg.bias - torch.Size([12]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.bbox_head.fc_cls.weight - torch.Size([2, 1024]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.bbox_head.fc_cls.bias - torch.Size([2]): 
+NormalInit: mean=0, std=0.01, bias=0 
+
+roi_head.bbox_head.fc_reg.weight - torch.Size([4, 1024]): 
+NormalInit: mean=0, std=0.001, bias=0 
+
+roi_head.bbox_head.fc_reg.bias - torch.Size([4]): 
+NormalInit: mean=0, std=0.001, bias=0 
+
+roi_head.bbox_head.shared_fcs.0.weight - torch.Size([1024, 12544]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+roi_head.bbox_head.shared_fcs.0.bias - torch.Size([1024]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+roi_head.bbox_head.shared_fcs.1.weight - torch.Size([1024, 1024]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+roi_head.bbox_head.shared_fcs.1.bias - torch.Size([1024]): 
+XavierInit: gain=1, distribution=uniform, bias=0 
+
+roi_head.mask_head.convs.0.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+roi_head.mask_head.convs.0.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+roi_head.mask_head.convs.1.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+roi_head.mask_head.convs.1.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+roi_head.mask_head.convs.2.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+roi_head.mask_head.convs.2.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+roi_head.mask_head.convs.3.conv.weight - torch.Size([256, 256, 3, 3]): 
+Initialized by user-defined `init_weights` in ConvModule  
+
+roi_head.mask_head.convs.3.conv.bias - torch.Size([256]): 
+The value is the same before and after calling `init_weights` of MaskRCNN  
+
+roi_head.mask_head.upsample.weight - torch.Size([256, 256, 2, 2]): 
+Initialized by user-defined `init_weights` in FCNMaskHead  
+
+roi_head.mask_head.upsample.bias - torch.Size([256]): 
+Initialized by user-defined `init_weights` in FCNMaskHead  
+
+roi_head.mask_head.conv_logits.weight - torch.Size([1, 256, 1, 1]): 
+Initialized by user-defined `init_weights` in FCNMaskHead  
+
+roi_head.mask_head.conv_logits.bias - torch.Size([1]): 
+Initialized by user-defined `init_weights` in FCNMaskHead  
+2023/02/09 21:03:50 - mmengine - INFO - Load checkpoint from https://download.openmmlab.com/mmdetection/v2.0/mask_rcnn/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco/mask_rcnn_r50_caffe_fpn_mstrain-poly_3x_coco_bbox_mAP-0.408__segm_mAP-0.37_20200504_163245-42aa3d00.pth
+2023/02/09 21:03:50 - mmengine - INFO - Checkpoints will be saved to /home/rongjc/my_mmdet/mmdetection-3.0.0rc5/tools/work_dirs/mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon.
+2023/02/09 21:04:00 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:04:00 - mmengine - INFO - Saving checkpoint at 1 epochs
+2023/02/09 21:04:04 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:04:04 - mmengine - INFO - bbox_mAP_copypaste: 0.376 0.573 0.481 0.000 0.194 0.468
+2023/02/09 21:04:04 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:04:04 - mmengine - INFO - segm_mAP_copypaste: 0.485 0.575 0.552 0.000 0.224 0.597
+2023/02/09 21:04:04 - mmengine - INFO - Epoch(val) [1][13/13]  coco/bbox_mAP: 0.3760  coco/bbox_mAP_50: 0.5730  coco/bbox_mAP_75: 0.4810  coco/bbox_mAP_s: 0.0000  coco/bbox_mAP_m: 0.1940  coco/bbox_mAP_l: 0.4680  coco/segm_mAP: 0.4850  coco/segm_mAP_50: 0.5750  coco/segm_mAP_75: 0.5520  coco/segm_mAP_s: 0.0000  coco/segm_mAP_m: 0.2240  coco/segm_mAP_l: 0.5970
+2023/02/09 21:04:13 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:04:13 - mmengine - INFO - Saving checkpoint at 2 epochs
+2023/02/09 21:04:16 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:04:16 - mmengine - INFO - bbox_mAP_copypaste: 0.647 0.794 0.764 0.000 0.490 0.729
+2023/02/09 21:04:16 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:04:16 - mmengine - INFO - segm_mAP_copypaste: 0.690 0.794 0.772 0.000 0.504 0.782
+2023/02/09 21:04:16 - mmengine - INFO - Epoch(val) [2][13/13]  coco/bbox_mAP: 0.6470  coco/bbox_mAP_50: 0.7940  coco/bbox_mAP_75: 0.7640  coco/bbox_mAP_s: 0.0000  coco/bbox_mAP_m: 0.4900  coco/bbox_mAP_l: 0.7290  coco/segm_mAP: 0.6900  coco/segm_mAP_50: 0.7940  coco/segm_mAP_75: 0.7720  coco/segm_mAP_s: 0.0000  coco/segm_mAP_m: 0.5040  coco/segm_mAP_l: 0.7820
+2023/02/09 21:04:25 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:04:25 - mmengine - INFO - Saving checkpoint at 3 epochs
+2023/02/09 21:04:28 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:04:28 - mmengine - INFO - bbox_mAP_copypaste: 0.695 0.820 0.820 0.000 0.474 0.785
+2023/02/09 21:04:28 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:04:28 - mmengine - INFO - segm_mAP_copypaste: 0.737 0.820 0.802 0.000 0.494 0.833
+2023/02/09 21:04:28 - mmengine - INFO - Epoch(val) [3][13/13]  coco/bbox_mAP: 0.6950  coco/bbox_mAP_50: 0.8200  coco/bbox_mAP_75: 0.8200  coco/bbox_mAP_s: 0.0000  coco/bbox_mAP_m: 0.4740  coco/bbox_mAP_l: 0.7850  coco/segm_mAP: 0.7370  coco/segm_mAP_50: 0.8200  coco/segm_mAP_75: 0.8020  coco/segm_mAP_s: 0.0000  coco/segm_mAP_m: 0.4940  coco/segm_mAP_l: 0.8330
+2023/02/09 21:04:37 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:04:37 - mmengine - INFO - Saving checkpoint at 4 epochs
+2023/02/09 21:04:39 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:04:39 - mmengine - INFO - bbox_mAP_copypaste: 0.675 0.818 0.805 0.303 0.486 0.749
+2023/02/09 21:04:39 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:04:39 - mmengine - INFO - segm_mAP_copypaste: 0.720 0.818 0.798 0.081 0.449 0.812
+2023/02/09 21:04:39 - mmengine - INFO - Epoch(val) [4][13/13]  coco/bbox_mAP: 0.6750  coco/bbox_mAP_50: 0.8180  coco/bbox_mAP_75: 0.8050  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.4860  coco/bbox_mAP_l: 0.7490  coco/segm_mAP: 0.7200  coco/segm_mAP_50: 0.8180  coco/segm_mAP_75: 0.7980  coco/segm_mAP_s: 0.0810  coco/segm_mAP_m: 0.4490  coco/segm_mAP_l: 0.8120
+2023/02/09 21:04:49 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:04:49 - mmengine - INFO - Saving checkpoint at 5 epochs
+2023/02/09 21:04:51 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:04:51 - mmengine - INFO - bbox_mAP_copypaste: 0.681 0.865 0.828 0.353 0.394 0.769
+2023/02/09 21:04:51 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:04:51 - mmengine - INFO - segm_mAP_copypaste: 0.762 0.865 0.865 0.177 0.461 0.857
+2023/02/09 21:04:51 - mmengine - INFO - Epoch(val) [5][13/13]  coco/bbox_mAP: 0.6810  coco/bbox_mAP_50: 0.8650  coco/bbox_mAP_75: 0.8280  coco/bbox_mAP_s: 0.3530  coco/bbox_mAP_m: 0.3940  coco/bbox_mAP_l: 0.7690  coco/segm_mAP: 0.7620  coco/segm_mAP_50: 0.8650  coco/segm_mAP_75: 0.8650  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.4610  coco/segm_mAP_l: 0.8570
+2023/02/09 21:05:00 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:05:00 - mmengine - INFO - Saving checkpoint at 6 epochs
+2023/02/09 21:05:03 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:05:03 - mmengine - INFO - bbox_mAP_copypaste: 0.692 0.876 0.793 0.303 0.586 0.742
+2023/02/09 21:05:03 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:05:03 - mmengine - INFO - segm_mAP_copypaste: 0.756 0.861 0.837 0.135 0.586 0.818
+2023/02/09 21:05:03 - mmengine - INFO - Epoch(val) [6][13/13]  coco/bbox_mAP: 0.6920  coco/bbox_mAP_50: 0.8760  coco/bbox_mAP_75: 0.7930  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.5860  coco/bbox_mAP_l: 0.7420  coco/segm_mAP: 0.7560  coco/segm_mAP_50: 0.8610  coco/segm_mAP_75: 0.8370  coco/segm_mAP_s: 0.1350  coco/segm_mAP_m: 0.5860  coco/segm_mAP_l: 0.8180
+2023/02/09 21:05:12 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:05:12 - mmengine - INFO - Saving checkpoint at 7 epochs
+2023/02/09 21:05:15 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:05:15 - mmengine - INFO - bbox_mAP_copypaste: 0.690 0.878 0.853 0.151 0.539 0.760
+2023/02/09 21:05:15 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:05:15 - mmengine - INFO - segm_mAP_copypaste: 0.771 0.864 0.864 0.202 0.612 0.841
+2023/02/09 21:05:15 - mmengine - INFO - Epoch(val) [7][13/13]  coco/bbox_mAP: 0.6900  coco/bbox_mAP_50: 0.8780  coco/bbox_mAP_75: 0.8530  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.5390  coco/bbox_mAP_l: 0.7600  coco/segm_mAP: 0.7710  coco/segm_mAP_50: 0.8640  coco/segm_mAP_75: 0.8640  coco/segm_mAP_s: 0.2020  coco/segm_mAP_m: 0.6120  coco/segm_mAP_l: 0.8410
+2023/02/09 21:05:24 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:05:24 - mmengine - INFO - Saving checkpoint at 8 epochs
+2023/02/09 21:05:26 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:05:26 - mmengine - INFO - bbox_mAP_copypaste: 0.697 0.849 0.802 0.000 0.576 0.769
+2023/02/09 21:05:26 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:05:26 - mmengine - INFO - segm_mAP_copypaste: 0.739 0.849 0.826 0.000 0.575 0.810
+2023/02/09 21:05:26 - mmengine - INFO - Epoch(val) [8][13/13]  coco/bbox_mAP: 0.6970  coco/bbox_mAP_50: 0.8490  coco/bbox_mAP_75: 0.8020  coco/bbox_mAP_s: 0.0000  coco/bbox_mAP_m: 0.5760  coco/bbox_mAP_l: 0.7690  coco/segm_mAP: 0.7390  coco/segm_mAP_50: 0.8490  coco/segm_mAP_75: 0.8260  coco/segm_mAP_s: 0.0000  coco/segm_mAP_m: 0.5750  coco/segm_mAP_l: 0.8100
+2023/02/09 21:05:35 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:05:35 - mmengine - INFO - Saving checkpoint at 9 epochs
+2023/02/09 21:05:37 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:05:37 - mmengine - INFO - bbox_mAP_copypaste: 0.740 0.857 0.844 0.076 0.567 0.811
+2023/02/09 21:05:37 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:05:37 - mmengine - INFO - segm_mAP_copypaste: 0.771 0.860 0.837 0.118 0.564 0.836
+2023/02/09 21:05:37 - mmengine - INFO - Epoch(val) [9][13/13]  coco/bbox_mAP: 0.7400  coco/bbox_mAP_50: 0.8570  coco/bbox_mAP_75: 0.8440  coco/bbox_mAP_s: 0.0760  coco/bbox_mAP_m: 0.5670  coco/bbox_mAP_l: 0.8110  coco/segm_mAP: 0.7710  coco/segm_mAP_50: 0.8600  coco/segm_mAP_75: 0.8370  coco/segm_mAP_s: 0.1180  coco/segm_mAP_m: 0.5640  coco/segm_mAP_l: 0.8360
+2023/02/09 21:05:47 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:05:47 - mmengine - INFO - Saving checkpoint at 10 epochs
+2023/02/09 21:05:50 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:05:50 - mmengine - INFO - bbox_mAP_copypaste: 0.756 0.862 0.862 0.303 0.591 0.819
+2023/02/09 21:05:50 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:05:50 - mmengine - INFO - segm_mAP_copypaste: 0.777 0.844 0.844 0.177 0.589 0.844
+2023/02/09 21:05:50 - mmengine - INFO - Epoch(val) [10][13/13]  coco/bbox_mAP: 0.7560  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8620  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.5910  coco/bbox_mAP_l: 0.8190  coco/segm_mAP: 0.7770  coco/segm_mAP_50: 0.8440  coco/segm_mAP_75: 0.8440  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.5890  coco/segm_mAP_l: 0.8440
+2023/02/09 21:06:00 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:06:00 - mmengine - INFO - Saving checkpoint at 11 epochs
+2023/02/09 21:06:02 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:06:02 - mmengine - INFO - bbox_mAP_copypaste: 0.743 0.864 0.864 0.303 0.597 0.805
+2023/02/09 21:06:02 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:06:02 - mmengine - INFO - segm_mAP_copypaste: 0.787 0.845 0.845 0.177 0.615 0.850
+2023/02/09 21:06:02 - mmengine - INFO - Epoch(val) [11][13/13]  coco/bbox_mAP: 0.7430  coco/bbox_mAP_50: 0.8640  coco/bbox_mAP_75: 0.8640  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.5970  coco/bbox_mAP_l: 0.8050  coco/segm_mAP: 0.7870  coco/segm_mAP_50: 0.8450  coco/segm_mAP_75: 0.8450  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6150  coco/segm_mAP_l: 0.8500
+2023/02/09 21:06:12 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:06:12 - mmengine - INFO - Saving checkpoint at 12 epochs
+2023/02/09 21:06:15 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:06:15 - mmengine - INFO - bbox_mAP_copypaste: 0.756 0.864 0.864 0.303 0.612 0.819
+2023/02/09 21:06:15 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:06:15 - mmengine - INFO - segm_mAP_copypaste: 0.780 0.844 0.844 0.177 0.624 0.842
+2023/02/09 21:06:15 - mmengine - INFO - Epoch(val) [12][13/13]  coco/bbox_mAP: 0.7560  coco/bbox_mAP_50: 0.8640  coco/bbox_mAP_75: 0.8640  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6120  coco/bbox_mAP_l: 0.8190  coco/segm_mAP: 0.7800  coco/segm_mAP_50: 0.8440  coco/segm_mAP_75: 0.8440  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6240  coco/segm_mAP_l: 0.8420
+2023/02/09 21:06:25 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:06:25 - mmengine - INFO - Saving checkpoint at 13 epochs
+2023/02/09 21:06:28 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:06:28 - mmengine - INFO - bbox_mAP_copypaste: 0.773 0.863 0.863 0.303 0.627 0.837
+2023/02/09 21:06:28 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:06:28 - mmengine - INFO - segm_mAP_copypaste: 0.779 0.843 0.843 0.177 0.601 0.842
+2023/02/09 21:06:28 - mmengine - INFO - Epoch(val) [13][13/13]  coco/bbox_mAP: 0.7730  coco/bbox_mAP_50: 0.8630  coco/bbox_mAP_75: 0.8630  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6270  coco/bbox_mAP_l: 0.8370  coco/segm_mAP: 0.7790  coco/segm_mAP_50: 0.8430  coco/segm_mAP_75: 0.8430  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6010  coco/segm_mAP_l: 0.8420
+2023/02/09 21:06:37 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:06:37 - mmengine - INFO - Saving checkpoint at 14 epochs
+2023/02/09 21:06:40 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:06:40 - mmengine - INFO - bbox_mAP_copypaste: 0.779 0.863 0.863 0.303 0.622 0.843
+2023/02/09 21:06:40 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:06:40 - mmengine - INFO - segm_mAP_copypaste: 0.775 0.843 0.843 0.177 0.598 0.835
+2023/02/09 21:06:40 - mmengine - INFO - Epoch(val) [14][13/13]  coco/bbox_mAP: 0.7790  coco/bbox_mAP_50: 0.8630  coco/bbox_mAP_75: 0.8630  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6220  coco/bbox_mAP_l: 0.8430  coco/segm_mAP: 0.7750  coco/segm_mAP_50: 0.8430  coco/segm_mAP_75: 0.8430  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.5980  coco/segm_mAP_l: 0.8350
+2023/02/09 21:06:49 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:06:49 - mmengine - INFO - Saving checkpoint at 15 epochs
+2023/02/09 21:06:51 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:06:51 - mmengine - INFO - bbox_mAP_copypaste: 0.772 0.865 0.865 0.303 0.621 0.835
+2023/02/09 21:06:51 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:06:51 - mmengine - INFO - segm_mAP_copypaste: 0.779 0.845 0.845 0.177 0.612 0.839
+2023/02/09 21:06:51 - mmengine - INFO - Epoch(val) [15][13/13]  coco/bbox_mAP: 0.7720  coco/bbox_mAP_50: 0.8650  coco/bbox_mAP_75: 0.8650  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6210  coco/bbox_mAP_l: 0.8350  coco/segm_mAP: 0.7790  coco/segm_mAP_50: 0.8450  coco/segm_mAP_75: 0.8450  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6120  coco/segm_mAP_l: 0.8390
+2023/02/09 21:07:01 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:01 - mmengine - INFO - Saving checkpoint at 16 epochs
+2023/02/09 21:07:03 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:07:03 - mmengine - INFO - bbox_mAP_copypaste: 0.768 0.865 0.865 0.303 0.634 0.827
+2023/02/09 21:07:03 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:07:03 - mmengine - INFO - segm_mAP_copypaste: 0.783 0.865 0.845 0.177 0.613 0.845
+2023/02/09 21:07:03 - mmengine - INFO - Epoch(val) [16][13/13]  coco/bbox_mAP: 0.7680  coco/bbox_mAP_50: 0.8650  coco/bbox_mAP_75: 0.8650  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6340  coco/bbox_mAP_l: 0.8270  coco/segm_mAP: 0.7830  coco/segm_mAP_50: 0.8650  coco/segm_mAP_75: 0.8450  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6130  coco/segm_mAP_l: 0.8450
+2023/02/09 21:07:13 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:13 - mmengine - INFO - Saving checkpoint at 17 epochs
+2023/02/09 21:07:15 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:07:15 - mmengine - INFO - bbox_mAP_copypaste: 0.765 0.863 0.863 0.303 0.615 0.829
+2023/02/09 21:07:15 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:07:15 - mmengine - INFO - segm_mAP_copypaste: 0.780 0.843 0.843 0.177 0.614 0.842
+2023/02/09 21:07:15 - mmengine - INFO - Epoch(val) [17][13/13]  coco/bbox_mAP: 0.7650  coco/bbox_mAP_50: 0.8630  coco/bbox_mAP_75: 0.8630  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6150  coco/bbox_mAP_l: 0.8290  coco/segm_mAP: 0.7800  coco/segm_mAP_50: 0.8430  coco/segm_mAP_75: 0.8430  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6140  coco/segm_mAP_l: 0.8420
+2023/02/09 21:07:25 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:25 - mmengine - INFO - Saving checkpoint at 18 epochs
+2023/02/09 21:07:27 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:07:27 - mmengine - INFO - bbox_mAP_copypaste: 0.767 0.864 0.864 0.303 0.616 0.832
+2023/02/09 21:07:27 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:07:27 - mmengine - INFO - segm_mAP_copypaste: 0.781 0.845 0.845 0.177 0.615 0.843
+2023/02/09 21:07:27 - mmengine - INFO - Epoch(val) [18][13/13]  coco/bbox_mAP: 0.7670  coco/bbox_mAP_50: 0.8640  coco/bbox_mAP_75: 0.8640  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6160  coco/bbox_mAP_l: 0.8320  coco/segm_mAP: 0.7810  coco/segm_mAP_50: 0.8450  coco/segm_mAP_75: 0.8450  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6150  coco/segm_mAP_l: 0.8430
+2023/02/09 21:07:36 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:36 - mmengine - INFO - Saving checkpoint at 19 epochs
+2023/02/09 21:07:39 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:07:39 - mmengine - INFO - bbox_mAP_copypaste: 0.772 0.864 0.864 0.303 0.618 0.837
+2023/02/09 21:07:39 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:07:39 - mmengine - INFO - segm_mAP_copypaste: 0.779 0.843 0.843 0.177 0.604 0.842
+2023/02/09 21:07:39 - mmengine - INFO - Epoch(val) [19][13/13]  coco/bbox_mAP: 0.7720  coco/bbox_mAP_50: 0.8640  coco/bbox_mAP_75: 0.8640  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6180  coco/bbox_mAP_l: 0.8370  coco/segm_mAP: 0.7790  coco/segm_mAP_50: 0.8430  coco/segm_mAP_75: 0.8430  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6040  coco/segm_mAP_l: 0.8420
+2023/02/09 21:07:48 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:48 - mmengine - INFO - Saving checkpoint at 20 epochs
+2023/02/09 21:07:50 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:07:50 - mmengine - INFO - bbox_mAP_copypaste: 0.764 0.862 0.862 0.303 0.624 0.825
+2023/02/09 21:07:50 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:07:50 - mmengine - INFO - segm_mAP_copypaste: 0.781 0.842 0.842 0.177 0.603 0.843
+2023/02/09 21:07:50 - mmengine - INFO - Epoch(val) [20][13/13]  coco/bbox_mAP: 0.7640  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8620  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6240  coco/bbox_mAP_l: 0.8250  coco/segm_mAP: 0.7810  coco/segm_mAP_50: 0.8420  coco/segm_mAP_75: 0.8420  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6030  coco/segm_mAP_l: 0.8430
+2023/02/09 21:07:59 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:07:59 - mmengine - INFO - Saving checkpoint at 21 epochs
+2023/02/09 21:08:02 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:02 - mmengine - INFO - bbox_mAP_copypaste: 0.771 0.862 0.862 0.303 0.624 0.835
+2023/02/09 21:08:02 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:02 - mmengine - INFO - segm_mAP_copypaste: 0.781 0.841 0.841 0.177 0.611 0.843
+2023/02/09 21:08:02 - mmengine - INFO - Epoch(val) [21][13/13]  coco/bbox_mAP: 0.7710  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8620  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6240  coco/bbox_mAP_l: 0.8350  coco/segm_mAP: 0.7810  coco/segm_mAP_50: 0.8410  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6110  coco/segm_mAP_l: 0.8430
+2023/02/09 21:08:11 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:08:11 - mmengine - INFO - Saving checkpoint at 22 epochs
+2023/02/09 21:08:13 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:13 - mmengine - INFO - bbox_mAP_copypaste: 0.768 0.862 0.862 0.303 0.614 0.834
+2023/02/09 21:08:13 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:13 - mmengine - INFO - segm_mAP_copypaste: 0.782 0.841 0.841 0.177 0.611 0.842
+2023/02/09 21:08:13 - mmengine - INFO - Epoch(val) [22][13/13]  coco/bbox_mAP: 0.7680  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8620  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.6140  coco/bbox_mAP_l: 0.8340  coco/segm_mAP: 0.7820  coco/segm_mAP_50: 0.8410  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.6110  coco/segm_mAP_l: 0.8420
+2023/02/09 21:08:22 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:08:22 - mmengine - INFO - Saving checkpoint at 23 epochs
+2023/02/09 21:08:25 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:25 - mmengine - INFO - bbox_mAP_copypaste: 0.759 0.861 0.861 0.303 0.590 0.823
+2023/02/09 21:08:25 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:25 - mmengine - INFO - segm_mAP_copypaste: 0.782 0.841 0.841 0.177 0.593 0.843
+2023/02/09 21:08:25 - mmengine - INFO - Epoch(val) [23][13/13]  coco/bbox_mAP: 0.7590  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8610  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.5900  coco/bbox_mAP_l: 0.8230  coco/segm_mAP: 0.7820  coco/segm_mAP_50: 0.8410  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.5930  coco/segm_mAP_l: 0.8430
+2023/02/09 21:08:34 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:08:34 - mmengine - INFO - Saving checkpoint at 24 epochs
+2023/02/09 21:08:36 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:36 - mmengine - INFO - bbox_mAP_copypaste: 0.768 0.860 0.860 0.303 0.598 0.834
+2023/02/09 21:08:36 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:36 - mmengine - INFO - segm_mAP_copypaste: 0.778 0.840 0.840 0.177 0.588 0.841
+2023/02/09 21:08:36 - mmengine - INFO - Epoch(val) [24][13/13]  coco/bbox_mAP: 0.7680  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8600  coco/bbox_mAP_s: 0.3030  coco/bbox_mAP_m: 0.5980  coco/bbox_mAP_l: 0.8340  coco/segm_mAP: 0.7780  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.1770  coco/segm_mAP_m: 0.5880  coco/segm_mAP_l: 0.8410
+2023/02/09 21:08:45 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:08:45 - mmengine - INFO - Saving checkpoint at 25 epochs
+2023/02/09 21:08:48 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:48 - mmengine - INFO - bbox_mAP_copypaste: 0.772 0.863 0.850 0.151 0.630 0.841
+2023/02/09 21:08:48 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:48 - mmengine - INFO - segm_mAP_copypaste: 0.778 0.842 0.842 0.151 0.600 0.842
+2023/02/09 21:08:48 - mmengine - INFO - Epoch(val) [25][13/13]  coco/bbox_mAP: 0.7720  coco/bbox_mAP_50: 0.8630  coco/bbox_mAP_75: 0.8500  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.6300  coco/bbox_mAP_l: 0.8410  coco/segm_mAP: 0.7780  coco/segm_mAP_50: 0.8420  coco/segm_mAP_75: 0.8420  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.6000  coco/segm_mAP_l: 0.8420
+2023/02/09 21:08:57 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:08:57 - mmengine - INFO - Saving checkpoint at 26 epochs
+2023/02/09 21:08:59 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:08:59 - mmengine - INFO - bbox_mAP_copypaste: 0.767 0.860 0.846 0.151 0.601 0.838
+2023/02/09 21:08:59 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:08:59 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.840 0.840 0.151 0.585 0.840
+2023/02/09 21:08:59 - mmengine - INFO - Epoch(val) [26][13/13]  coco/bbox_mAP: 0.7670  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8460  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.6010  coco/bbox_mAP_l: 0.8380  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5850  coco/segm_mAP_l: 0.8400
+2023/02/09 21:09:08 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:09:08 - mmengine - INFO - Saving checkpoint at 27 epochs
+2023/02/09 21:09:11 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:09:11 - mmengine - INFO - bbox_mAP_copypaste: 0.760 0.861 0.847 0.151 0.586 0.833
+2023/02/09 21:09:11 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:09:11 - mmengine - INFO - segm_mAP_copypaste: 0.778 0.840 0.840 0.303 0.581 0.844
+2023/02/09 21:09:11 - mmengine - INFO - Epoch(val) [27][13/13]  coco/bbox_mAP: 0.7600  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.5860  coco/bbox_mAP_l: 0.8330  coco/segm_mAP: 0.7780  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.3030  coco/segm_mAP_m: 0.5810  coco/segm_mAP_l: 0.8440
+2023/02/09 21:09:20 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:09:20 - mmengine - INFO - Saving checkpoint at 28 epochs
+2023/02/09 21:09:22 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:09:22 - mmengine - INFO - bbox_mAP_copypaste: 0.765 0.861 0.847 0.151 0.597 0.836
+2023/02/09 21:09:22 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:09:22 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.840 0.840 0.303 0.581 0.841
+2023/02/09 21:09:22 - mmengine - INFO - Epoch(val) [28][13/13]  coco/bbox_mAP: 0.7650  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.5970  coco/bbox_mAP_l: 0.8360  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.3030  coco/segm_mAP_m: 0.5810  coco/segm_mAP_l: 0.8410
+2023/02/09 21:09:32 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:09:32 - mmengine - INFO - Saving checkpoint at 29 epochs
+2023/02/09 21:09:34 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:09:34 - mmengine - INFO - bbox_mAP_copypaste: 0.768 0.861 0.847 0.151 0.605 0.839
+2023/02/09 21:09:34 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:09:34 - mmengine - INFO - segm_mAP_copypaste: 0.774 0.840 0.840 0.303 0.572 0.842
+2023/02/09 21:09:34 - mmengine - INFO - Epoch(val) [29][13/13]  coco/bbox_mAP: 0.7680  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.6050  coco/bbox_mAP_l: 0.8390  coco/segm_mAP: 0.7740  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.3030  coco/segm_mAP_m: 0.5720  coco/segm_mAP_l: 0.8420
+2023/02/09 21:09:43 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:09:43 - mmengine - INFO - Saving checkpoint at 30 epochs
+2023/02/09 21:09:46 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:09:46 - mmengine - INFO - bbox_mAP_copypaste: 0.760 0.861 0.847 0.151 0.583 0.832
+2023/02/09 21:09:46 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:09:46 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.840 0.840 0.151 0.579 0.842
+2023/02/09 21:09:46 - mmengine - INFO - Epoch(val) [30][13/13]  coco/bbox_mAP: 0.7600  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.5830  coco/bbox_mAP_l: 0.8320  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5790  coco/segm_mAP_l: 0.8420
+2023/02/09 21:09:55 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:09:55 - mmengine - INFO - Saving checkpoint at 31 epochs
+2023/02/09 21:09:57 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:09:57 - mmengine - INFO - bbox_mAP_copypaste: 0.762 0.862 0.848 0.151 0.595 0.834
+2023/02/09 21:09:57 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:09:57 - mmengine - INFO - segm_mAP_copypaste: 0.773 0.841 0.841 0.151 0.572 0.840
+2023/02/09 21:09:57 - mmengine - INFO - Epoch(val) [31][13/13]  coco/bbox_mAP: 0.7620  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8480  coco/bbox_mAP_s: 0.1510  coco/bbox_mAP_m: 0.5950  coco/bbox_mAP_l: 0.8340  coco/segm_mAP: 0.7730  coco/segm_mAP_50: 0.8410  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5720  coco/segm_mAP_l: 0.8400
+2023/02/09 21:10:06 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:06 - mmengine - INFO - Saving checkpoint at 32 epochs
+2023/02/09 21:10:08 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:10:08 - mmengine - INFO - bbox_mAP_copypaste: 0.764 0.862 0.848 0.202 0.605 0.833
+2023/02/09 21:10:08 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:10:08 - mmengine - INFO - segm_mAP_copypaste: 0.774 0.841 0.841 0.151 0.572 0.841
+2023/02/09 21:10:08 - mmengine - INFO - Epoch(val) [32][13/13]  coco/bbox_mAP: 0.7640  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8480  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.6050  coco/bbox_mAP_l: 0.8330  coco/segm_mAP: 0.7740  coco/segm_mAP_50: 0.8410  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5720  coco/segm_mAP_l: 0.8410
+2023/02/09 21:10:11 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:18 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:18 - mmengine - INFO - Saving checkpoint at 33 epochs
+2023/02/09 21:10:20 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:10:20 - mmengine - INFO - bbox_mAP_copypaste: 0.768 0.860 0.847 0.202 0.590 0.842
+2023/02/09 21:10:20 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:10:20 - mmengine - INFO - segm_mAP_copypaste: 0.772 0.840 0.840 0.151 0.570 0.841
+2023/02/09 21:10:20 - mmengine - INFO - Epoch(val) [33][13/13]  coco/bbox_mAP: 0.7680  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5900  coco/bbox_mAP_l: 0.8420  coco/segm_mAP: 0.7720  coco/segm_mAP_50: 0.8400  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5700  coco/segm_mAP_l: 0.8410
+2023/02/09 21:10:29 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:29 - mmengine - INFO - Saving checkpoint at 34 epochs
+2023/02/09 21:10:31 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:10:31 - mmengine - INFO - bbox_mAP_copypaste: 0.764 0.862 0.848 0.202 0.583 0.839
+2023/02/09 21:10:31 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:10:31 - mmengine - INFO - segm_mAP_copypaste: 0.773 0.862 0.841 0.303 0.572 0.843
+2023/02/09 21:10:31 - mmengine - INFO - Epoch(val) [34][13/13]  coco/bbox_mAP: 0.7640  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8480  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5830  coco/bbox_mAP_l: 0.8390  coco/segm_mAP: 0.7730  coco/segm_mAP_50: 0.8620  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.3030  coco/segm_mAP_m: 0.5720  coco/segm_mAP_l: 0.8430
+2023/02/09 21:10:41 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:41 - mmengine - INFO - Saving checkpoint at 35 epochs
+2023/02/09 21:10:43 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:10:43 - mmengine - INFO - bbox_mAP_copypaste: 0.759 0.863 0.848 0.202 0.589 0.829
+2023/02/09 21:10:43 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:10:43 - mmengine - INFO - segm_mAP_copypaste: 0.778 0.842 0.842 0.151 0.579 0.844
+2023/02/09 21:10:43 - mmengine - INFO - Epoch(val) [35][13/13]  coco/bbox_mAP: 0.7590  coco/bbox_mAP_50: 0.8630  coco/bbox_mAP_75: 0.8480  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5890  coco/bbox_mAP_l: 0.8290  coco/segm_mAP: 0.7780  coco/segm_mAP_50: 0.8420  coco/segm_mAP_75: 0.8420  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5790  coco/segm_mAP_l: 0.8440
+2023/02/09 21:10:52 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:10:52 - mmengine - INFO - Saving checkpoint at 36 epochs
+2023/02/09 21:10:54 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:10:55 - mmengine - INFO - bbox_mAP_copypaste: 0.759 0.862 0.848 0.202 0.582 0.831
+2023/02/09 21:10:55 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:10:55 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.862 0.841 0.151 0.578 0.842
+2023/02/09 21:10:55 - mmengine - INFO - Epoch(val) [36][13/13]  coco/bbox_mAP: 0.7590  coco/bbox_mAP_50: 0.8620  coco/bbox_mAP_75: 0.8480  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5820  coco/bbox_mAP_l: 0.8310  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8620  coco/segm_mAP_75: 0.8410  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5780  coco/segm_mAP_l: 0.8420
+2023/02/09 21:11:04 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:11:04 - mmengine - INFO - Saving checkpoint at 37 epochs
+2023/02/09 21:11:06 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:11:06 - mmengine - INFO - bbox_mAP_copypaste: 0.760 0.860 0.847 0.202 0.569 0.834
+2023/02/09 21:11:06 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:11:06 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.860 0.839 0.151 0.563 0.845
+2023/02/09 21:11:06 - mmengine - INFO - Epoch(val) [37][13/13]  coco/bbox_mAP: 0.7600  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5690  coco/bbox_mAP_l: 0.8340  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8600  coco/segm_mAP_75: 0.8390  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5630  coco/segm_mAP_l: 0.8450
+2023/02/09 21:11:16 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:11:16 - mmengine - INFO - Saving checkpoint at 38 epochs
+2023/02/09 21:11:18 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:11:18 - mmengine - INFO - bbox_mAP_copypaste: 0.759 0.861 0.847 0.202 0.572 0.829
+2023/02/09 21:11:18 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:11:18 - mmengine - INFO - segm_mAP_copypaste: 0.777 0.861 0.840 0.151 0.563 0.846
+2023/02/09 21:11:18 - mmengine - INFO - Epoch(val) [38][13/13]  coco/bbox_mAP: 0.7590  coco/bbox_mAP_50: 0.8610  coco/bbox_mAP_75: 0.8470  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5720  coco/bbox_mAP_l: 0.8290  coco/segm_mAP: 0.7770  coco/segm_mAP_50: 0.8610  coco/segm_mAP_75: 0.8400  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5630  coco/segm_mAP_l: 0.8460
+2023/02/09 21:11:27 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:11:27 - mmengine - INFO - Saving checkpoint at 39 epochs
+2023/02/09 21:11:30 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:11:30 - mmengine - INFO - bbox_mAP_copypaste: 0.760 0.860 0.846 0.202 0.563 0.834
+2023/02/09 21:11:30 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:11:30 - mmengine - INFO - segm_mAP_copypaste: 0.775 0.860 0.839 0.151 0.558 0.846
+2023/02/09 21:11:30 - mmengine - INFO - Epoch(val) [39][13/13]  coco/bbox_mAP: 0.7600  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8460  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5630  coco/bbox_mAP_l: 0.8340  coco/segm_mAP: 0.7750  coco/segm_mAP_50: 0.8600  coco/segm_mAP_75: 0.8390  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5580  coco/segm_mAP_l: 0.8460
+2023/02/09 21:11:39 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:11:39 - mmengine - INFO - Saving checkpoint at 40 epochs
+2023/02/09 21:11:41 - mmengine - INFO - Evaluating bbox...
+2023/02/09 21:11:41 - mmengine - INFO - bbox_mAP_copypaste: 0.760 0.860 0.846 0.202 0.568 0.833
+2023/02/09 21:11:41 - mmengine - INFO - Evaluating segm...
+2023/02/09 21:11:41 - mmengine - INFO - segm_mAP_copypaste: 0.776 0.860 0.838 0.151 0.567 0.844
+2023/02/09 21:11:41 - mmengine - INFO - Epoch(val) [40][13/13]  coco/bbox_mAP: 0.7600  coco/bbox_mAP_50: 0.8600  coco/bbox_mAP_75: 0.8460  coco/bbox_mAP_s: 0.2020  coco/bbox_mAP_m: 0.5680  coco/bbox_mAP_l: 0.8330  coco/segm_mAP: 0.7760  coco/segm_mAP_50: 0.8600  coco/segm_mAP_75: 0.8380  coco/segm_mAP_s: 0.1510  coco/segm_mAP_m: 0.5670  coco/segm_mAP_l: 0.8440
+2023/02/09 21:11:50 - mmengine - INFO - Exp name: mask-rcnn_r-caffe-fpn_ms-poly-1x_balloon_20230209_210347
+2023/02/09 21:11:50 - mmengine - INFO - Saving checkpoint at 41 epochs
