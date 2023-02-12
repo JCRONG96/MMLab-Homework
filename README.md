@@ -7,3 +7,5 @@ AI 实战营，将手把手带你入门 OpenMMLab，剖析学习路径，洞悉�
 第一次作业训练模型权重 链接：https://pan.baidu.com/s/1K9qVGJulgfIRfTdCWWWKFQ  提取码：toma
 
 第二次作业训练模型权重 链接：https://pan.baidu.com/s/1Ecv8mZgLViYMymlJ9jfI2w  提取码：toma
+
+第二次作业训练模型权重 链接：https://pan.baidu.com/s/11griabe1lehwdjScyu6PVw  提取码：toma
